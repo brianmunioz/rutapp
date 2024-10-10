@@ -2,7 +2,7 @@ import { View, ActivityIndicator, Alert } from "react-native";
 import { Actionsheet, Button, Text, Center, HamburgerIcon, useDisclose, Box, Modal, FormControl, Input, Select, CheckIcon, WarningIcon, ChevronLeftIcon, ChevronRightIcon } from "native-base";
 
 import React, { useEffect, useState } from "react";
-import { ExpoLeaflet, MapLayer, MapMarker, MapShape } from "expo-leaflet";
+import { ExpoLeaflet, MapLayer, MapMarker } from "expo-leaflet";
 import * as Location from 'expo-location';
 import { Fragment } from "react";
 import CrearContacto from "../Modals/CrearContacto";
@@ -37,50 +37,70 @@ export default function MyMap() {
     onOpen,
     onClose
   } = useDisclose();
-  useEffect(() => {
-    const pedircontactos = async () => {
-      interface contactosSQL {
-        id: number,
-        lat: number,
-        lng: number,
-        nombre: string,
-        direccion: string,
-        notas: string,
-        tipo: string,
-        telefono: number
-      }
-      const contactossql: contactosSQL[] = await db.getAllAsync("SELECT * FROM contactos");
-
-      const nuevoscontactos: MapMarker[] = contactossql.map((e) => {
-        return {
-          id: e.id.toString(),
-          position: { lat: e.lat, lng: e?.lng },
-          icon: `
-          <div 
-  style="color:blue; cursor:pointer; position:relative;" 
-  onclick="this.querySelector('.tooltip-${e.id}').style.display = this.querySelector('.tooltip-${e.id}').style.display === 'none' || this.querySelector('.tooltip-${e.id}').style.display === '' ? 'block' : 'none'"
->
-  ${e.tipo == "proveedor" ? "🟧" : "🟩"}
-  <p 
-    class="tooltip-${e.id}" 
-    style="display:none; position:absolute; white-space: nowrap; top:10px; left:10px;border-radius: 0% 5px 5px 5px; background:white; color: #000; padding:5px; border:1px solid #ccc; z-index:100;"
-  >
-    <span style="font-weight: bold">${e.tipo.toUpperCase()}:</span> ${e.nombre} <br/>
-    <span style="font-weight: bold">DIRECCIÓN:</span> ${e.direccion} <br/>
-    <span style="font-weight: bold">TELEFONO:</span>${e.telefono} <br/>
-    <span style="font-weight: bold">NOTA:</span>${e.notas}
-
-    
-  </p>
-</div>`,
-          size: [15, 15],
-        }
-
-      })
-      setContactos(nuevoscontactos)
-      console.log(contactossql)
-
+  const pedircontactos = async () => {
+    interface contactosSQL {
+      id: number,
+      lat: number,
+      lng: number,
+      nombre: string,
+      direccion: string,
+      notas: string,
+      tipo: string,
+      telefono: number
     }
+    const contactossql: contactosSQL[] = await db.getAllAsync("SELECT * FROM contactos");
+
+    const nuevoscontactos: MapMarker[] = contactossql.map((e) => {
+      return {
+        id: e.id.toString(),
+        position: { lat: e.lat, lng: e?.lng },
+        icon: `
+        <div 
+          style="position: relative; cursor: pointer;" 
+          onclick="
+            const tooltip = this.querySelector('.tooltip-${e.id}');
+            const isVisible = tooltip.style.display === 'block';
+      
+            // Ajusta la opacidad de todos los otros pins
+            document.querySelectorAll('.map-pin').forEach(pin => {
+              pin.style.opacity = isVisible ? '1' : '0.2'; // Reduce la opacidad si el tooltip está abierto
+              if (pin === this) {
+                pin.style.opacity = '1'; // Asegura que el pin clickeado esté completamente visible
+              }
+            });
+      
+            // Alterna la visibilidad del tooltip
+            document.querySelectorAll('.tooltip').forEach(t => t.style.display = 'none'); // Cierra otros tooltips
+            tooltip.style.display = isVisible ? 'none' : 'block';  // Alterna la visibilidad del tooltip
+      
+            // Ajusta el z-index del pin actual
+            this.style.zIndex = isVisible ? 1 : 9999;
+          "
+          class="map-pin"
+        >
+          <div style="z-index: 1; position: relative;"> 
+            ${e.tipo == "proveedor" ? '🔵' : "🟣"}
+          </div>
+          <p 
+            class="tooltip tooltip-${e.id}" 
+            style="display:none; position:absolute;font-weight:600 ; white-space: nowrap; top:10px; left:10px; border-radius: 5px; background:white; color: #000; padding:5px; border:1px solid #ccc; z-index: 10000;" 
+          >   <span style="font-weight: bold">${e.tipo.toUpperCase()}:</span> ${e.nombre} <br/>
+            <span style="font-weight: bold">DIRECCIÓN:</span> ${e.direccion} <br/>
+            <span style="font-weight: bold">TELÉFONO:</span> ${e.telefono} <br/>
+            <span style="font-weight: bold">NOTA:</span> ${e.notas}    
+          </p>
+        </div>`,
+        size: [15, 15],
+      }
+      
+      
+    
+
+    })
+    setContactos(nuevoscontactos)
+  }
+  useEffect(() => {
+
     pedircontactos()
 
   }, [])
@@ -114,14 +134,16 @@ export default function MyMap() {
     {
       id: "1",
       position: !ownPosition ? { lat: -38.72707, lng: -62.27592 } : ownPosition,
-      icon: "<div >🔴</div>",
-
-      size: [15, 15],
+      icon: '<div style="border-radius: 50%; padding: 3px; background-color: rgb(255, 132, 132); box-shadow: 0 0 10px rgba(255, 132, 132, 0.9);">👤</div>',
+      size: [12, 12],
     }
+    
   ];
 
 
   const [modoContacto, setModoContacto] = useState(true);
+  const [mapCenterPos, setMapCenterPos] = useState<MapMarker>();
+
   const cambiarDeModo = () => {
     setModoContacto(!modoContacto)
   }
@@ -165,12 +187,10 @@ export default function MyMap() {
       </View>
 
       <ExpoLeaflet
-
-
         mapLayers={[mapLayer]}
         mapMarkers={accionContacto === "crear" ? ubicacionSeleccionada : [markers[0], ...contactos]}
         mapCenterPosition={!ownPosition ? { lat: -38.72707, lng: -62.27592 } : ownPosition}
-        
+
         maxZoom={18}
         zoom={16}
         loadingIndicator={() => <ActivityIndicator />}
@@ -180,28 +200,11 @@ export default function MyMap() {
             const newMarker: MapMarker = {
               id: "23",
               position: { lat: message.location.lat, lng: message.location.lng },
-              icon: `
-                  <div 
-  style="color:blue; cursor:pointer; position:relative;" 
-  onclick="this.querySelector('.tooltip').style.display = this.querySelector('.tooltip').style.display === 'none' || this.querySelector('.tooltip').style.display === '' ? 'block' : 'none'"
->
-  🏀
-  <div 
-    class="tooltip" 
-    style="display:none; position:absolute; top:25px; left:0; background:white; padding:5px; border:1px solid #ccc; z-index:100;"
-  >
-    Información adicional sobre este marcador
-  </div>
-</div>
-`,
-              size: [20, 20],
+              icon: `<div>🔴</div>`,
+              size: [15, 15],
             }
-            
-            setUbicacionSeleccionada([newMarker])
-            //Ahora toca que al dar click en listo, se guarde las coordenadas con el resto de lo
-            // setAllMarkers((prevMarkers) => [...prevMarkers, newMarker]);
+            setUbicacionSeleccionada([newMarker]);
           }
-          console.log("position", ownPosition);
         }}
       />
       {accionContacto === null && modoContacto &&
@@ -225,7 +228,10 @@ export default function MyMap() {
       }
 
       {/*Modal de crear contacto */}
-      <CrearContacto modalVisible={modalVisible} setModalVisible={setModalVisible} ubicacionSeleccionada={ubicacionSeleccionada} resetTodo={resetTodo}></CrearContacto>
+      <CrearContacto modalVisible={modalVisible} setModalVisible={setModalVisible} ubicacionSeleccionada={ubicacionSeleccionada} resetTodo={()=>{
+        resetTodo();
+        pedircontactos();
+        }}></CrearContacto>
 
 
     </View>

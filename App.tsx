@@ -1,18 +1,13 @@
 import { StyleSheet, View } from "react-native";
-import { SQLiteProvider,  useSQLiteContext, type SQLiteDatabase } from 'expo-sqlite';
+import { SQLiteProvider, type SQLiteDatabase } from 'expo-sqlite';
 import MyMap from "./components/MyMap";
-
-
-import * as SQLite from 'expo-sqlite'; 
 import {  NativeBaseProvider } from "native-base";
 
 export default function App() {
 
   async function initializeDatabase(db:SQLiteDatabase): Promise<void> {
-
     try {
       await db.execAsync(`PRAGMA journal_mode = WAL;`);
-
       await db.execAsync(`
         CREATE TABLE IF NOT EXISTS contactos (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
