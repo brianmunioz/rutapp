@@ -1,10 +1,9 @@
 import { StyleSheet, View } from "react-native";
 import { SQLiteProvider, type SQLiteDatabase } from 'expo-sqlite';
 import MyMap from "./components/MyMap";
-import {  NativeBaseProvider } from "native-base";
-
+import { AppRegistry } from 'react-native';
+import { PaperProvider } from 'react-native-paper';
 export default function App() {
-
   async function initializeDatabase(db:SQLiteDatabase): Promise<void> {
     try {
       await db.execAsync(`PRAGMA journal_mode = WAL;`);
@@ -34,22 +33,24 @@ export default function App() {
           tipo_contacto TEXT
         );
       `);
-      const alls = await db.getAllAsync('SELECT * FROM contactos');
-      console.log(alls)
+      
     } catch (error) {
         console.log('Error while initializing database : ', error);
     }
 }
   return (
+    
     <SQLiteProvider databaseName="rutapp_db" onInit={initializeDatabase}>
-    <NativeBaseProvider>
+      <PaperProvider>
     <View style={styles.container}>    
-          <MyMap />         
+    <MyMap/>
     </View>
-    </NativeBaseProvider>
+    </PaperProvider>
     </SQLiteProvider>
   );
 }
+
+AppRegistry.registerComponent('rutapp',()=>App)
 
 const styles = StyleSheet.create({
   container: {

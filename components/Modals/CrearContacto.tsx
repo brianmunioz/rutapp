@@ -1,108 +1,118 @@
-import { Button, CheckIcon, FormControl, Input, Modal, Select } from 'native-base';
 import { MapMarker } from 'expo-leaflet';
-import React, { useRef, useState } from 'react'
-import { Alert } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react'
+import { View, Text, Alert } from 'react-native';
 import { useSQLiteContext } from 'expo-sqlite';
+import IDatosContacto from '@/interfaces/IDatosContacto';
+import { Button, RadioButton, Snackbar,TextInput } from 'react-native-paper';
 
+// interface IProps {
+//   modalVisible: boolean;
+//   setModalVisible: (bool: boolean) => void;
+//   ubicacionSeleccionada: MapMarker[],
+//   resetTodo: () => void
+// }
 interface IProps {
-  modalVisible: boolean;
-  setModalVisible: (bool: boolean) => void;
+  setModalVisible: (bool: boolean) => void,
   ubicacionSeleccionada: MapMarker[],
-  resetTodo : ()=>void
+  resetTodo: () => void
+
 }
 
-const CrearContacto: React.FC<IProps> = ({ modalVisible, setModalVisible, ubicacionSeleccionada, resetTodo }) => {
-  const initialRef = useRef(null);
+const CrearContacto: React.FC<IProps> = ({setModalVisible,ubicacionSeleccionada,resetTodo}) => {
+  const [mensaje,setMensaje] = useState({bool:false, texto:"",error:true});
+
+  const [data, setData] = useState<IDatosContacto>({ nombre: "", tipo: "cliente", direccion: "", telefono: "", nota: "", lat: 0, lng: 0,area:"" });
   const db = useSQLiteContext();
-  const finalRef = useRef(null);
-  const [nombre, setNombre] = useState('');
-  const [telefono, setTelefono] = useState('');
-  const [direccion, setDireccion] = useState('');
-  const [notas, setNotas] = useState('');
+  useEffect(() => {
+    console.log(data);
+  }, [data])
+const crear = async()=>{
+  if(!data.nombre || !data.direccion){
+    setMensaje({bool: true, texto: "Nombre y dirección son obligatorios para poder crear un contacto nuevo",error:true})
+  }else if((!data.area && data.telefono) || (!data.telefono && data.area)){
+    setMensaje({bool: true,texto:"Área y teléfono deben ser completados ambos para poder guardar número de teléfono",error:true})
+  }else{
+const telefono = data.area && data.telefono ? data.area +""+ data.telefono :null;
 
-  const [tipo, setTipo] = useState('proveedor');
+    await db.runAsync('INSERT INTO contactos (nombre,direccion,telefono,tipo,notas,lat,lng) VALUES (?,?,?,?,?,?,?)', data.nombre, data.direccion,telefono != null ? parseInt(telefono): null,data.tipo,data.nota, ubicacionSeleccionada[0].position.lat,ubicacionSeleccionada[0].position.lng);
+
+      setMensaje({bool: true,texto:"Contacto creado con éxito, en breve se dirigirá a la vista de contactos",error:false})
+      setTimeout(()=>{
+        resetTodo()
+      },2000)
+
+  }
+}
   return (
-    <Modal isOpen={modalVisible} onClose={() => setModalVisible(false)} initialFocusRef={initialRef} finalFocusRef={finalRef}>
-      <Modal.Content>
-        <Modal.CloseButton />
-        <Modal.Header>Guardar contacto</Modal.Header>
-        <Modal.Body>
-          <FormControl isRequired isInvalid={!nombre || nombre.length <= 3 ? true : false}>
-            <FormControl.Label >Nombre</FormControl.Label>
-            <Input ref={initialRef} value={nombre} onChangeText={(e) => setNombre(e)} />
-            <FormControl.ErrorMessage>
-              Debe ingresar un nombre válido
-            </FormControl.ErrorMessage>
-          </FormControl>
-          <FormControl isInvalid={!direccion || direccion.length < 4 ? true : false} isRequired mt="3">
-            <FormControl.Label>Dirección</FormControl.Label>
-            <Input value={direccion} onChangeText={(e) => setDireccion(e)} />
-            <FormControl.ErrorMessage>
-              Debe ingresar una dirección válida
-            </FormControl.ErrorMessage>
-          </FormControl>
-          <FormControl mt="3">
-            <FormControl.Label >Telefono</FormControl.Label>
-            <Input keyboardType="numeric" value={telefono} onChangeText={(e) => setTelefono(e)} />
-          </FormControl>
-          <FormControl mt="3">
-            <FormControl.Label>Notas</FormControl.Label>
-            <Input value={notas} onChangeText={(e) => setNotas(e)} />
-          </FormControl>
-          <FormControl isReadOnly>
-            <FormControl.Label>Seleccione tipo de contacto</FormControl.Label>
-            <Select
-              accessibilityLabel="Proveedor"
-              placeholder="Seleccione tipo de contacto"
-              _selectedItem={{
-                bg: "teal.600",
-                endIcon: <CheckIcon size={5}
-                />,
-              }}
-              mt="1"
-              defaultValue={tipo}
-              onValueChange={(e) => setTipo(e)}
+    <View style={{width: "100%", paddingHorizontal: 20, paddingTop: 10, flex: 1, backgroundColor: "white", gap: 10}}>
+      {/* comments */}
+      <Button style={{alignSelf: "flex-start"}} onPress={()=>setModalVisible(false)}>Volver</Button>
+      <TextInput 
+        label="Nombre"
+        value={data.nombre}
+        mode="outlined"
+        activeOutlineColor='#000'
+        onChangeText={text => setData({ ...data, nombre: text })}  />
+         <TextInput 
+        label="Dirección"
+        value={data.direccion}
+        mode="outlined"
+        activeOutlineColor='#000'
+        onChangeText={text => setData({ ...data, direccion: text })} />
+         
+        <View style={{display: "flex",justifyContent: "flex-start",flexDirection: "row", gap:5}}>
+        <TextInput 
+        label="Código de área"
+        value={data.area}
+        keyboardType='numeric'
+
+        mode="outlined"
+        activeOutlineColor='#000'
+        style={{width:"30%"}}
+        onChangeText={text => setData({ ...data, area: text })} />
+         <TextInput 
+        label="Número de telefono"
+        keyboardType='numeric'
+        value={data.telefono}
+        mode="outlined"
+        style={{width:"70%"}}
+        activeOutlineColor='#000'
+        onChangeText={text => setData({ ...data, telefono: text })} />
+        </View>
+        <View>
+        <Text>Seleccione tipo de contacto:</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
+        <RadioButton
+        value="cliente"
+        
+        status={ data.tipo === 'cliente' ? 'checked' : 'unchecked' }
+        onPress={() => setData({...data,tipo:"cliente"})}
+      />
+                <Text>Cliente</Text>
+        </View>
 
 
-            >
-              <Select.Item label="Proveedor" value="proveedor" />
-              <Select.Item label="Cliente" value="cliente" />
-            </Select>
-
-          </FormControl>
-
-        </Modal.Body>
-        <Modal.Footer>
-          <Button.Group space={2}>
-            <Button variant="ghost" colorScheme="blueGray" onPress={() => {
-              setModalVisible(false);
-              
-            }}>
-              Cancelar
-            </Button>
-            <Button
-              backgroundColor={"green.800"}
-              onPress={async () => {
-                if (ubicacionSeleccionada.length == 0) {
-                  Alert.alert("no seleccionó una ubicación")
-                } else {                  
-                   await db.runAsync("INSERT INTO contactos (nombre, direccion,lat,lng,telefono, notas,tipo) VALUES (?,?,?,?,?,?,?)", nombre, direccion, ubicacionSeleccionada[0].position.lat, ubicacionSeleccionada[0].position.lng, telefono, notas, tipo)
-                   setModalVisible(false);
-                   setNombre("");
-                   setDireccion("");
-                   setNotas("");
-                   setTipo("proveedor");
-                   setTelefono("");                                      
-                   resetTodo();                  
-                  Alert.alert(nombre+" se agregó a tu lista de contactos como "+tipo);
-                }
-              }}>
-              Guardar contacto
-            </Button>
-          </Button.Group>
-        </Modal.Footer>
-      </Modal.Content>
-    </Modal>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
+        <RadioButton
+        value="proveedor"
+        
+        status={ data.tipo === 'proveedor' ? 'checked' : 'unchecked' }
+        onPress={() => setData({...data,tipo:"proveedor"})}
+      />
+                <Text>Proveedor</Text>
+        </View>
+     
+      
+    </View> 
+           <TextInput 
+        label="Nota"
+        value={data.nota}
+        mode="outlined"
+        activeOutlineColor='#000'
+        onChangeText={text => setData({ ...data, nota: text })} />
+        <Button mode='contained' onPress={crear}>Crear contacto</Button>
+        <Snackbar style={{backgroundColor:mensaje.error ? "#ff3a30" : "#386b38"}} rippleColor={"black"} visible={mensaje.bool} onDismiss={()=>setMensaje({...mensaje,bool:false})}>{mensaje.texto}</Snackbar>
+    </View>
   )
 }
 
