@@ -1,16 +1,11 @@
 import { MapMarker } from 'expo-leaflet';
-import React, { useEffect, useRef, useState } from 'react'
-import { View, Text, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react'
+import { View, Text } from 'react-native';
 import { useSQLiteContext } from 'expo-sqlite';
 import IDatosContacto from '@/interfaces/IDatosContacto';
 import { Button, RadioButton, Snackbar,TextInput } from 'react-native-paper';
 
-// interface IProps {
-//   modalVisible: boolean;
-//   setModalVisible: (bool: boolean) => void;
-//   ubicacionSeleccionada: MapMarker[],
-//   resetTodo: () => void
-// }
+
 interface IProps {
   setModalVisible: (bool: boolean) => void,
   ubicacionSeleccionada: MapMarker[],

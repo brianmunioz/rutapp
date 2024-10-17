@@ -6,5 +6,5 @@ export default interface IDatosContacto{
     telefono:string,
     nota:string,
     direccion: string,
-    area:string
+    area?:string
 }

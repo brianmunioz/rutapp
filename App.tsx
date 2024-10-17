@@ -34,6 +34,7 @@ export default function App() {
         );
       `);
       
+      
     } catch (error) {
         console.log('Error while initializing database : ', error);
     }
