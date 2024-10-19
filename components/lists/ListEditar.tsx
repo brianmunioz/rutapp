@@ -1,5 +1,5 @@
 import IcontactosSQL from '@/interfaces/IContactosSQL';
-import React, {  useState } from 'react'
+import React, {  useEffect, useState } from 'react'
 import { View, ScrollView, Linking } from "react-native";
 import { ActivityIndicator, Button, Card, Dialog, Icon, IconButton, Portal, Searchbar, Text } from 'react-native-paper';
 import EditarContacto from '../Modals/EditarContacto';
@@ -7,10 +7,11 @@ import EditarContacto from '../Modals/EditarContacto';
 interface IProps {
   datos: IcontactosSQL[],
   eliminar:(e:string)=>void,
-  verUbicacion: (lat:number,lng:number)=>void
+  verUbicacion: (lat:number,lng:number)=>void,
+  pedirContactos: ()=>void
 }
 
-const ListEditar: React.FC<IProps> = ({ datos,eliminar, verUbicacion }) => {
+const ListEditar: React.FC<IProps> = ({ datos,eliminar, verUbicacion,pedirContactos }) => {
   const [eliminarModal, setEliminarModal] = useState({ bool: false, id: "", nombre: "" });
   const [search, setSearch] = useState("");
   const [eliminando, setEliminando] = useState(false);
@@ -27,6 +28,9 @@ const ListEditar: React.FC<IProps> = ({ datos,eliminar, verUbicacion }) => {
       setContactos(datos)
     }
   }
+  useEffect(()=>{
+    setContactos(datos)
+  },[editarContacto.bool])
   if (!editarContacto.bool){
   return (
     <ScrollView style={{ width: "100%", flex: 1, paddingHorizontal: 10, paddingTop: 10, backgroundColor: "white" }}>
@@ -37,7 +41,7 @@ const ListEditar: React.FC<IProps> = ({ datos,eliminar, verUbicacion }) => {
           onChangeText={(text) => buscar(text)}
           value={search}
         />
-        {
+        {contactos.length >0 ? 
           contactos.map((e,index) => <Card key={e.id} style={{ width: "100%" }}>
             <Card.Title
               title={e.nombre}
@@ -56,7 +60,8 @@ const ListEditar: React.FC<IProps> = ({ datos,eliminar, verUbicacion }) => {
               </Button>
             </Card.Actions>
           </Card>
-          )
+          ):
+          <Text>No tiene contactos guardados</Text>
         }
       </View>
       <Portal>
@@ -95,7 +100,7 @@ const ListEditar: React.FC<IProps> = ({ datos,eliminar, verUbicacion }) => {
     </ScrollView>
 
   )} else {
-    return <EditarContacto setModalVisible={(e)=>setEditarContacto({bool:e,index:0})} datos={datos[editarContacto.index]}/>
+    return <EditarContacto pedirContactos={()=>pedirContactos()} setModalVisible={(e)=>setEditarContacto({bool:e,index:0})} datos={datos[editarContacto.index]}/>
   }
 }
 

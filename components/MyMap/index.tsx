@@ -28,7 +28,7 @@ export default function MyMap() {
   const [boolLocation, setBoolLocation] = useState<boolean>(false);
   const [zoom, setZoom] = useState<number>(3);
   const [ownPosition, setOwnPosition] = useState<null | ILocation>(null)
-  const [accionContacto, setAccionContacto] = useState<string | null>(null)
+  const [accionUsuario, setAccionUsuario] = useState<string | null>(null)
   const [modalVisible, setModalVisible] = useState(false);
   const [markerTel, setMarkerTel] = useState({ id: 0, show: false, tel: 0 })
   const [contactos, setContactos] = useState<MapMarker[]>([])
@@ -53,6 +53,7 @@ export default function MyMap() {
     setBoolLocation(true);
     setMapCenterPos({lat,lng})
     setEditar(false)
+    setAccionUsuario(null)
 
     setBoolLocation(false);
 
@@ -134,6 +135,7 @@ export default function MyMap() {
 
     setContactos(nuevoscontactos)
   }
+
   useEffect(() => {
     pedircontactos()
     getLocationAsync().catch((error) => {
@@ -163,45 +165,58 @@ export default function MyMap() {
   const resetTodo = () => {
     pedircontactos();
     setUbicacionSeleccionada([]);
-    setModalVisible(false)
-    setAccionContacto(null)
+    setModalVisible(false);
+    setAccionUsuario(null);
+    setMarkerTel({ id: 0, show: false, tel: 0 });
   }
   return (
     <View style={{ flex: 1, width: "100%", justifyContent: 'center' }}>
       <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", width: "100%", height: 40 }}>
-        <Text style={{ width: "100%", color: "white", textAlign: "center", letterSpacing: 3, justifyContent: "center", textTransform: "uppercase" }}> <Icon source={modoContacto ? "account-box" : "truck-fast-outline"} size={15} color="white"></Icon>{modoContacto ? "contactos" : "repartos"}{accionContacto ? ' - ' + accionContacto : ""}</Text>
+        <Text style={{ width: "100%", color: "white", textAlign: "center", letterSpacing: 3, justifyContent: "center", textTransform: "uppercase" }}> <Icon source={modoContacto ? "account-box" : "truck-fast-outline"} size={15} color="white"></Icon>{modoContacto ? "contactos" : "repartos"}{accionUsuario ? ' - ' + accionUsuario : ""}</Text>
 
       </View>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%", height: 50 }}>
-        <View style={{ flexDirection: "row", justifyContent: "flex-start", alignItems: "center", height: 50 }}>
 
-          <Button contentStyle={{ height: "100%" }} buttonColor="#fdfd96" style={{ borderRadius: 0 }} onPress={() => cambiarDeModo()} mode="contained" ><Icon size={20} source={"sync"} color="black" /></Button>
-          <Button contentStyle={{ height: "100%" }} buttonColor="rgb(255, 132, 132)" style={{ borderRadius: 0 }} mode="contained" onPress={
+          <Button contentStyle={{ height: "100%"}} buttonColor="#fdfd96" style={{ flex:1, borderRadius: 0 }} onPress={() => cambiarDeModo()} mode="contained" ><Icon size={20} source={"sync"} color="black" /></Button>
+          <Button contentStyle={{ height: "100%" }} buttonColor="rgb(255, 132, 132)" style={{ flex:1, borderRadius: 0 }} mode="contained" onPress={
             () => {
               if (ownPosition) {
                 setMapCenterPos(actualPos);
+                setMarkerTel({ id: 0, show: false, tel: 0 })
+                setAccionUsuario(null);
+
                 setBoolLocation(true);
               }
             }} ><Icon size={20} source={"crosshairs-gps"} color="black" /></Button>
-          <Button contentStyle={{ height: "100%" }} buttonColor="#77dd77" style={{ borderRadius: 0 }} mode="contained" onPress={() => setEditar(!editar)}><Icon size={20} source={"playlist-edit"} color="black" /></Button>
-          <Button contentStyle={{ height: "100%" }} buttonColor="#84b6f4" style={{ borderRadius: 0 }} mode="contained" ><Icon size={20} source={"playlist-remove"} color="black" /></Button>
+          <Button contentStyle={{ height: "100%" }} buttonColor="#77dd77" style={{ flex:1, borderRadius: 0 }} mode="contained" onPress={() => {
+            setMarkerTel({ id: 0, show: false, tel: 0 })
+            setEditar(true)
+            setAccionUsuario('editar');
+
+            }}><Icon size={20} source={"playlist-edit"} color="black" /></Button>
+            
           <Button onPress={() => {
             setEditar(false);
-            setAccionContacto(null);
+            setAccionUsuario(null);
+            setMarkerTel({ id: 0, show: false, tel: 0 })  
             setModalVisible(false)
-          }} contentStyle={{ height: "100%" }} buttonColor="#e1e3e1" style={{ borderRadius: 0 }} mode="contained" ><Icon size={20} source={"earth-box"} color="black" /></Button>
-        </View>
-        <Button textColor="black" contentStyle={{ height: 50 }} style={{ backgroundColor: "#FF6961", height: 50, borderRadius: 0, width: 70, justifyContent: "center" }} mode="contained" onPress={() => setAccionContacto('crear')}
+          }} contentStyle={{ height: "100%"}} buttonColor="#e1e3e1" style={{ flex:1, borderRadius: 0 }} mode="contained" ><Icon size={20} source={"earth-box"} color="black" /></Button>
+        <Button textColor="black" contentStyle={{ height: 50 }} style={{ flex:1, backgroundColor: "#FF6961", height: 50, borderRadius: 0, width: 70, justifyContent: "center" }} mode="contained" onPress={() => {
+          setMarkerTel({ id: 0, show: false, tel: 0 })
+          setAccionUsuario('crear');
+          setEditar(false)
+        
+        }}
         ><Icon size={20} source={"map-marker-plus-outline"}></Icon></Button>
       </View>
       {editar &&
-        <ListEditar datos={contactosArr} verUbicacion={verUbicacionContacto} eliminar={(e)=>eliminarContacto(e)} />
+        <ListEditar pedirContactos={pedircontactos}  datos={contactosArr}  verUbicacion={verUbicacionContacto} eliminar={(e)=>eliminarContacto(e)}  />
       }
       {
         !modalVisible && !editar &&
         <ExpoLeaflet
           mapLayers={[mapLayer]}
-          mapMarkers={accionContacto === "crear" ? ubicacionSeleccionada : [markers[0], ...contactos]}
+          mapMarkers={accionUsuario === "crear" ? ubicacionSeleccionada : [markers[0], ...contactos]}
           mapCenterPosition={mapCenterPos}
           maxZoom={18}
           zoom={boolLocation ? zoom : defaultZoom}
@@ -213,7 +228,7 @@ export default function MyMap() {
               setActualPos(message.mapCenter)
             }
 
-            if (message.tag === 'onMapClicked' && (accionContacto == "crear")) {
+            if (message.tag === 'onMapClicked' && (accionUsuario == "crear")) {
               const newMarker: MapMarker = {
                 id: "ubicacion-seleccionada",
                 position: { lat: message.location.lat, lng: message.location.lng },
@@ -238,18 +253,25 @@ export default function MyMap() {
       }
 
       {
-        accionContacto === "crear" && ubicacionSeleccionada && modalVisible &&
+        accionUsuario === "crear" && ubicacionSeleccionada && modalVisible &&
         <CrearContacto resetTodo={resetTodo} ubicacionSeleccionada={ubicacionSeleccionada} setModalVisible={setModalVisible} />
       }
 
-      {accionContacto === null && modoContacto && !editar &&
+      {accionUsuario === null && modoContacto && !editar &&
         <View style={{ position: "absolute", bottom: 0, flexDirection: "row", justifyContent: "center", height: 50 }}>
           <Button mode="contained" disabled={!markerTel.show} contentStyle={{ height: "100%", borderRightWidth: 1, borderRightColor: "#C0C0C0" }} style={{ width: "50%", borderRadius: 0, backgroundColor: !markerTel.show ? "#dcdcdc" : "#051b37" }} icon={"whatsapp"} onPress={() => markerTel.show && markerTel.tel !== 0 && Linking.openURL(`http://api.whatsapp.com/send?phone=${markerTel.tel}`)}>{markerTel.tel === 0 && markerTel.show ? "WHATSAPP (no tiene)" : "WHATSAPP"}</Button>
           <Button mode="contained" disabled={!markerTel.show} contentStyle={{ height: "100%" }} style={{ width: "50%", borderRadius: 0, backgroundColor: !markerTel.show ? "#dcdcdc" : "#051b37", borderLeftWidth: 1, borderLeftColor: "#737373" }} icon="phone" onPress={() => markerTel.show && markerTel.tel !== 0 && Linking.openURL(`tel:+${markerTel.tel}`)}>{markerTel.tel === 0 && markerTel.show ? "LLAMAR (no tiene número)" : "LLAMAR"}</Button>
         </View>}
-      {accionContacto === "crear" && modoContacto && !modalVisible && !editar &&
+      {accionUsuario === "crear" && modoContacto && !modalVisible && !editar &&
         <View style={{ position: "absolute", bottom: 0, flexDirection: "row", justifyContent: "center", height: 50 }}>
-          <Button mode="contained" contentStyle={{ height: "100%" }} style={{ width: "50%", borderRadius: 0, backgroundColor: "#ff3a30" }} onPress={() => resetTodo()}>cancelar</Button>
+          <Button mode="contained" contentStyle={{ height: "100%" }} style={{ width: "50%", borderRadius: 0, backgroundColor: "#ff3a30" }} onPress={() => {
+            if(accionUsuario == "crear"){
+              resetTodo();
+            setEditar(false);
+            }
+            
+
+            }}>cancelar</Button>
           <Button mode="contained" contentStyle={{ height: "100%" }} style={{ backgroundColor: ubicacionSeleccionada.length > 0 ? "#386b38" : "#dcdcdc", width: "50%", borderRadius: 0 }} onPress={() => {
             if (ubicacionSeleccionada.length > 0) {
 

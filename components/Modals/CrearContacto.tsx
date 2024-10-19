@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { View, Text } from 'react-native';
 import { useSQLiteContext } from 'expo-sqlite';
 import IDatosContacto from '@/interfaces/IDatosContacto';
-import { Button, RadioButton, Snackbar,TextInput } from 'react-native-paper';
+import { Button, Icon, RadioButton, Snackbar,TextInput } from 'react-native-paper';
 
 
 interface IProps {
@@ -83,7 +83,7 @@ const telefono = data.area && data.telefono ? data.area +""+ data.telefono :null
         status={ data.tipo === 'cliente' ? 'checked' : 'unchecked' }
         onPress={() => setData({...data,tipo:"cliente"})}
       />
-                <Text>Cliente</Text>
+                <Text><Icon color='green' size={20} source={'map-marker'}/>Cliente</Text>
         </View>
 
 
@@ -94,7 +94,7 @@ const telefono = data.area && data.telefono ? data.area +""+ data.telefono :null
         status={ data.tipo === 'proveedor' ? 'checked' : 'unchecked' }
         onPress={() => setData({...data,tipo:"proveedor"})}
       />
-                <Text>Proveedor</Text>
+                <Text><Icon color='red' size={20} source={'map-marker'}/>Proveedor</Text>
         </View>
      
       
