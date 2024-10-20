@@ -19,20 +19,23 @@ export default function App() {
           tipo TEXT NOT NULL
         );
       `);
-      
+            
       await db.execAsync(`
         CREATE TABLE IF NOT EXISTS repartos (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           nombre TEXT NOT NULL,
           direccion TEXT NOT NULL,
           descripcion TEXT,
+          finalizado BOOL,
           lat REAL NOT NULL,
           lng REAL NOT NULL,
           notas TEXT,
           telefono INTEGER,
-          tipo_contacto TEXT
+          tipo_contacto TEXT,
+          IDContacto INTEGER,
+          fecha DATE
         );
-      `);
+      `); 
       
       
     } catch (error) {

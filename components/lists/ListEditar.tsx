@@ -2,7 +2,7 @@ import IcontactosSQL from '@/interfaces/IContactosSQL';
 import React, {  useEffect, useState } from 'react'
 import { View, ScrollView, Linking } from "react-native";
 import { ActivityIndicator, Button, Card, Dialog, Icon, IconButton, Portal, Searchbar, Text } from 'react-native-paper';
-import EditarContacto from '../Modals/EditarContacto';
+import EditarContacto from '../Acciones/EditarContacto';
 
 interface IProps {
   datos: IcontactosSQL[],
