@@ -35,8 +35,7 @@ export default function App() {
           IDContacto INTEGER,
           fecha DATE
         );
-      `); 
-      
+      `);       
       
     } catch (error) {
         console.log('Error while initializing database : ', error);
