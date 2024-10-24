@@ -36,8 +36,7 @@ const EditarContacto: React.FC<IProps> = ({ setModalVisible, datos, pedirContact
             setMensaje({ bool: true, texto: "Nombre y dirección no pueden estar vacios", error: true })
         } else {
 
-            const editadoo = await db.runAsync('UPDATE contactos SET nombre = ?, direccion = ?, telefono = ?, tipo=?, notas=?, lat=?, lng=? WHERE id = ?', data.nombre, data.direccion, data.telefono != null ? parseInt(data.telefono) : null, data.tipo, data.nota, data.lat, data.lng, datos.id);
-            console.log(editadoo)
+            await db.runAsync('UPDATE contactos SET nombre = ?, direccion = ?, telefono = ?, tipo=?, notas=?, lat=?, lng=? WHERE id = ?', data.nombre, data.direccion, data.telefono != null ? parseInt(data.telefono) : null, data.tipo, data.nota, data.lat, data.lng, datos.id);
             setMensaje({ bool: true, texto: "Contacto editado con éxito, en breve se dirigirá a la vista de contactos", error: false })
             pedirContactos()
 

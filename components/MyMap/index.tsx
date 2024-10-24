@@ -10,6 +10,7 @@ import IcontactosSQL from "@/interfaces/IContactosSQL";
 import IRepartosSQL from "@/interfaces/IRepartosSQL";
 import CrearReparto from "../Acciones/CrearReparto";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import obtenerIDS from "@/helpers/obtenerIDS";
 const mapLayer: MapLayer = {
   baseLayerName: "OpenStreetMap",
   baseLayerIsChecked: true,
@@ -25,9 +26,7 @@ interface ILocation {
 }
 
 export default function MyMap() {
-  const initPosWithoutLocation: ILocation = { lat: -35.103034508838604, lng: -59.50661499922906 };
-  const [mapCenterPos, setMapCenterPos] = useState<ILocation>(initPosWithoutLocation);
-  const [actualPos, setActualPos] = useState<ILocation>(initPosWithoutLocation);
+  
   const [boolLocation, setBoolLocation] = useState<boolean>(false);
   const [zoom, setZoom] = useState<number>(3);
   const [ownPosition, setOwnPosition] = useState<null | ILocation>(null)
@@ -39,22 +38,21 @@ export default function MyMap() {
   const [contactosArr, setContactosArr] = useState<IcontactosSQL[]>([])
   const [repartosArr, setRepartosArr] = useState<IRepartosSQL[]>([])
   const [repartoConContacto, setRepartoConContacto] = useState<boolean | null>(null);
-  
-
   const [editar, setEditar] = useState(false);
   const [mensajeSnack, setMensajeSnack] = useState({ bool: false, texto: "" });
   const [ubicacionSeleccionada, setUbicacionSeleccionada] = useState<MapMarker[]>([]);
   const [modoContacto, setModoContacto] = useState(true);
+  const initPosWithoutLocation: ILocation = repartosArr.length > 0 || contactosArr.length > 0 ? contactosArr.length>0 && (accionUsuario != 'repartiendo' || !modoContacto) ? {lat: contactosArr[contactosArr.length-1].lat, lng: contactosArr[contactosArr.length-1].lng }:{lat: repartosArr[repartosArr.length-1].lat, lng: repartosArr[repartosArr.length-1].lng } :{ lat: -35.103034508838604, lng: -59.50661499922906 };
+  const [mapCenterPos, setMapCenterPos] = useState<ILocation>(initPosWithoutLocation);
+  const [actualPos, setActualPos] = useState<ILocation>(initPosWithoutLocation);
+  
 
-  const defaultZoom = ownPosition ? 18 : 3;
+
+  const defaultZoom = ownPosition || repartosArr.length >0 || contactosArr.length > 0 ? 18 : 3;
   const getRepartiendo = async (): Promise<boolean> => {
-    const value = await AsyncStorage.getItem('repartiendo');
-    
+    const value = await AsyncStorage.getItem('repartiendo');    
     return value == 'true';  // Comparamos usando == para que funcione aunque value sea string o booleano
   };
-  
-    
-
     useEffect(() => {
       if (ownPosition) {
         if (ownPosition.lat != actualPos.lat && ownPosition.lng != actualPos.lng && boolLocation === true) {
@@ -63,6 +61,7 @@ export default function MyMap() {
         }
       }
       setBoolLocation(false)
+      
 
     }, [boolLocation])
    
@@ -93,11 +92,6 @@ export default function MyMap() {
           lng: e.coords.longitude,
         })
       })
-        .catch(() => {
-          const index = dataMarkers.length - 1;
-          setMapCenterPos(dataMarkers && { lat: dataMarkers[index].position.lat, lng: dataMarkers[index].position.lng })
-
-        })
 
       setBoolLocation(true)
       setZoom(17)
@@ -161,10 +155,26 @@ export default function MyMap() {
     }
 
     const pedirRepartos = async () => {
-
+      const idsAsync = await AsyncStorage.getItem('ordenrepartos');
+      let ids:number[] = idsAsync && idsAsync !== null ?JSON.parse(idsAsync) : [];
+      if(!ids){
+        await AsyncStorage.setItem('ordenrepartos','[]');
+      }
       const repartosSQL: IRepartosSQL[] = await db.getAllAsync("SELECT * FROM repartos WHERE finalizado=false");      
-      setRepartosArr(repartosSQL)
-      const nuevosrepartos: MapMarker[] = repartosSQL.map((e) => {
+      if(ids.length <= 0 && repartosSQL.length>0){
+        ids = repartosSQL.map(e=>e.id)
+        await AsyncStorage.setItem('ordenrepartos',JSON.stringify(ids))
+      }
+      const orderedRepartos:IRepartosSQL[]=[];
+      if(ids && ids.length>0){
+        ids.map(id => {
+          
+          const repartoEncontrado = repartosSQL.find(e => e.id === id);
+          if(repartoEncontrado) orderedRepartos.push(repartoEncontrado)
+        })
+      }
+      setRepartosArr(orderedRepartos)
+      const nuevosrepartos: MapMarker[] = orderedRepartos.map((e) => {
         return {
           id: e.id.toString(),
           position: { lat: e.lat, lng: e?.lng },
@@ -226,6 +236,9 @@ export default function MyMap() {
       } else {
         pedirRepartos()
       }
+      if(!ownPosition){
+        setMapCenterPos(initPosWithoutLocation);
+      }
       getLocationAsync().catch((error) => {
         console.error(error)
       })
@@ -260,6 +273,7 @@ export default function MyMap() {
     useEffect(()=>{
       if(dataMarkers.length > 0){
         setMapCenterPos({lat: dataMarkers[0].position.lat,lng:dataMarkers[0].position.lng});
+        setZoom(18)
       }
       
     },[repartoBool])
@@ -267,8 +281,11 @@ export default function MyMap() {
     return (
       <View style={{ flex: 1, width: "100%", justifyContent: 'center' }}>
         <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", width: "100%", height: 40 }}>
-          <Text style={{ width: "100%", color: "white", textAlign: "center", letterSpacing: 3, justifyContent: "center", textTransform: "uppercase" }}> <Icon source={modoContacto ? "account-box" : "truck-fast-outline"} size={15} color="white"></Icon>{modoContacto ? "contactos" : "repartos"}{accionUsuario ? ' - ' + accionUsuario : ""}</Text>
+{ accionUsuario != 'repartiendo' ?          <Text style={{ width: "100%", color: "white", textAlign: "center", letterSpacing: 3, justifyContent: "center", textTransform: "uppercase" }}> <Icon source={modoContacto ? "account-box" : "truck-fast-outline"} size={15} color="white"></Icon>{modoContacto ? "contactos" : "repartos"}{accionUsuario ? ' - ' + accionUsuario : ""}</Text>
+:
+<Text style={{ width: "100%", color: "white", textAlign: "center", letterSpacing: 3, justifyContent: "center", textTransform: "uppercase" }}> <Icon source={  "truck-fast-outline"} size={15} color="white"></Icon>{repartosArr.length > 0 ? repartosArr[0].nombre+' -' : 'Cargando'} {repartosArr.length > 0 ?repartosArr[0].direccion:'...'}</Text>
 
+}
         </View>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%", height: 50 }}>
           {
@@ -346,7 +363,7 @@ export default function MyMap() {
           !modalVisible && !editar &&
           <ExpoLeaflet
             mapLayers={[mapLayer]}
-            mapMarkers={accionUsuario === "crear" ? [...ubicacionSeleccionada, ...dataMarkers] : [markers[0], ...dataMarkers]}
+            mapMarkers={accionUsuario === "crear" ? [...ubicacionSeleccionada, ...dataMarkers] : ownPosition ? [markers[0], ...dataMarkers]:[...dataMarkers] }
             mapCenterPosition={boolLocation || repartoBool? mapCenterPos : mapCenterPos }
             maxZoom={18}
             zoom={boolLocation ? zoom : defaultZoom}
@@ -414,11 +431,32 @@ export default function MyMap() {
               let arreglo=[...dataMarkers];
 
               arreglo.push(arreglo.splice(0, 1)[0]);
+              async function reordenarArreglo(){
+                const idsAsync = await AsyncStorage.getItem('ordenrepartos');
+                let ids:number[] = idsAsync && idsAsync !== null ?JSON.parse(idsAsync) : [];
+                 ids.push(ids.splice(0, 1)[0]);
+                await AsyncStorage.setItem('ordenrepartos',JSON.stringify(ids))
+                pedirRepartos()
+
+              }
+              reordenarArreglo()
               setDataMarkers(arreglo)
               
             }}>POSTERGAR</Button>
             <Button mode="contained" icon="chevron-right" contentStyle={{ height: "100%" }} style={{ width: "33.3%", borderRadius: 0 }} onPress={() => {
-              setAccionUsuario(null);
+              async function avanzarReparto(){
+                await db.runAsync('UPDATE repartos SET finalizado = ? WHERE id = ?',  false,repartosArr[0].id);
+                const idsAsync = await AsyncStorage.getItem('ordenrepartos');
+                let ids:number[] = idsAsync && idsAsync !== null ?JSON.parse(idsAsync) : [];
+                const nuevosIds = ids.filter(e=>e!=repartosArr[0].id);
+                await AsyncStorage.setItem('ordenrepartos',JSON.stringify(nuevosIds))
+
+                pedirRepartos();
+                setMapCenterPos(actualPos)
+              setRepartoBool(!repartoBool)
+
+              }
+              avanzarReparto();
             }}>AVANZAR</Button>
           </View>
         }

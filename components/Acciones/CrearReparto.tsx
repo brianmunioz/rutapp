@@ -27,13 +27,15 @@ const CrearReparto: React.FC<IProps> = ({ setModalVisible, ubicacionSeleccionada
     if (!data.nombre || !data.direccion) {
       setMensaje({ bool: true, texto: "Nombre y dirección son obligatorios para poder crear un contacto nuevo", error: true })
     } else {
-      console.log(seleccionContacto)
 
-      const telefono = data.area && data.telefono ? data.area + "" + data.telefono : null;
+      let telefono = data.area && data.telefono ? data.area + "" + data.telefono : null;
+      if(seleccionContacto){
+        telefono=data.telefono;
+      }
       const fecha = new Date().toISOString().slice(0, 19).replace('T', ' '); // Formato YYYY-MM-DD HH:MM:SS      //agregar 3 campos mas para que funcione
-     const response =  await db.runAsync('INSERT INTO repartos (nombre,direccion,telefono,tipo_contacto,descripcion,lat,lng,IDContacto,fecha,finalizado) VALUES (?,?,?,?,?,?,?,?,?,?)', data.nombre, data.direccion, telefono != null ? parseInt(telefono) : null, data.tipo, data.descripcion, seleccionContacto? data.lat: ubicacionSeleccionada[0].position.lat, seleccionContacto? data.lng:ubicacionSeleccionada[0].position.lng,data.IDContacto,fecha,false)
+      await db.runAsync('INSERT INTO repartos (nombre,direccion,telefono,tipo_contacto,descripcion,lat,lng,IDContacto,fecha,finalizado) VALUES (?,?,?,?,?,?,?,?,?,?)', data.nombre, data.direccion, telefono != null ? parseInt(telefono) : null, data.tipo, data.descripcion, seleccionContacto? data.lat: ubicacionSeleccionada[0].position.lat, seleccionContacto? data.lng:ubicacionSeleccionada[0].position.lng,data.IDContacto,fecha,false).catch(e=>console.log)
 
-      setMensaje({ bool: true, texto: "Contacto creado con éxito, en breve se dirigirá a la vista de contactos", error: false })
+      setMensaje({ bool: true, texto: "Reparto creado con éxito, en breve se dirigirá a la vista de repartos", error: false })
       setTimeout(() => {
         resetTodo()
       }, 2000)
