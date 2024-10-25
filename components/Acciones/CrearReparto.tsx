@@ -4,6 +4,8 @@ import { View, ScrollView } from 'react-native';
 import { useSQLiteContext } from 'expo-sqlite';
 import { Button, Card, Divider, Icon, Snackbar, Text, TextInput, TouchableRipple } from 'react-native-paper';
 import IcontactosSQL from '@/interfaces/IContactosSQL';
+import IRepartosSQL from '@/interfaces/IRepartosSQL';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 interface IProps {
@@ -29,16 +31,29 @@ const CrearReparto: React.FC<IProps> = ({ setModalVisible, ubicacionSeleccionada
     } else {
 
       let telefono = data.area && data.telefono ? data.area + "" + data.telefono : null;
+      let lat = seleccionContacto? data.lat: ubicacionSeleccionada[0].position.lat;
+      let lng = seleccionContacto? data.lng: ubicacionSeleccionada[0].position.lng
       if(seleccionContacto){
         telefono=data.telefono;
       }
       const fecha = new Date().toISOString().slice(0, 19).replace('T', ' '); // Formato YYYY-MM-DD HH:MM:SS      //agregar 3 campos mas para que funcione
-      await db.runAsync('INSERT INTO repartos (nombre,direccion,telefono,tipo_contacto,descripcion,lat,lng,IDContacto,fecha,finalizado) VALUES (?,?,?,?,?,?,?,?,?,?)', data.nombre, data.direccion, telefono != null ? parseInt(telefono) : null, data.tipo, data.descripcion, seleccionContacto? data.lat: ubicacionSeleccionada[0].position.lat, seleccionContacto? data.lng:ubicacionSeleccionada[0].position.lng,data.IDContacto,fecha,false).catch(e=>console.log)
+       const response = await db.runAsync('INSERT INTO repartos (nombre,direccion,telefono,tipo_contacto,descripcion,lat,lng,IDContacto,fecha,finalizado) VALUES (?,?,?,?,?,?,?,?,?,?)', data.nombre, data.direccion, 2915664567, data.tipo, data.descripcion, lat, lng,data.IDContacto,fecha,false);
 
-      setMensaje({ bool: true, texto: "Reparto creado con éxito, en breve se dirigirá a la vista de repartos", error: false })
+       if (response && response?.lastInsertRowId) {
+        const idsAsync = await AsyncStorage.getItem('ordenrepartos');
+
+        let ids: number[] = idsAsync && idsAsync !== null ? JSON.parse(idsAsync) : [];
+        ids.push(response.lastInsertRowId)
+        await AsyncStorage.setItem('ordenrepartos',JSON.stringify(ids))
+        setMensaje({ bool: true, texto: "Reparto creado con éxito, en breve se dirigirá a la vista de repartos", error: false })
       setTimeout(() => {
         resetTodo()
-      }, 2000)
+      }, 1500)
+        console.log(`Registro creado con éxito. ID: ${response.lastInsertRowId}`);
+      } else {
+        console.log("Error al crear el registro o falta de confirmación.");
+      }
+      
 
     }
   }
