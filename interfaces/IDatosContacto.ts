@@ -6,5 +6,7 @@ export default interface IDatosContacto{
     telefono:string,
     nota:string,
     direccion: string,
-    area?:string
+    area?:string,
+    descripcion?:string,
+    IDContacto?:number|null
 }

@@ -10,6 +10,7 @@ import IcontactosSQL from "@/interfaces/IContactosSQL";
 import IRepartosSQL from "@/interfaces/IRepartosSQL";
 import CrearReparto from "../Acciones/CrearReparto";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import ListEditarReparto from "../lists/ListEditarReparto";
 const mapLayer: MapLayer = {
   baseLayerName: "OpenStreetMap",
   baseLayerIsChecked: true,
@@ -67,6 +68,15 @@ export default function MyMap() {
 
 
   }, [boolLocation]);
+  useEffect(()=>{
+    if(!editar){
+      if(modoContacto){
+        pedircontactos();
+      }else{
+        pedirRepartos();
+      }
+    }
+  },[editar])
 
   const db = useSQLiteContext();
   const verUbicacionContacto = (lat: number, lng: number) => {
@@ -86,6 +96,14 @@ export default function MyMap() {
   const eliminarContacto = async (e: string) => {
     await db.runAsync('DELETE FROM contactos WHERE id = $id', { $id: e }); // Binding named parameters from object
     pedircontactos();
+  }
+  const eliminarReparto = async (e: string) => {
+    await db.runAsync('DELETE FROM repartos WHERE id = $id', { $id: e }); // Binding named parameters from object
+    const idsAsync = await AsyncStorage.getItem('ordenrepartos');
+    let ids: number[] = idsAsync && idsAsync !== null ? JSON.parse(idsAsync) : [];
+    const nuevosIds = repartosArr.length > 1 ? ids.filter(z => z != parseInt(e)):[]; 
+    await AsyncStorage.setItem('ordenrepartos', JSON.stringify(nuevosIds));
+    pedirRepartos();
   }
   const getLocationAsync = async () => {
 
@@ -326,6 +344,9 @@ export default function MyMap() {
               setMarkerTel({ id: 0, show: false, tel: 0 })
               setEditar(true)
               setAccionUsuario('editar');
+            }else{
+              setEditar(true)
+              setAccionUsuario('editar');
             }
 
 
@@ -366,6 +387,10 @@ export default function MyMap() {
 
 
       </View>
+      {editar && !modoContacto && 
+              <ListEditarReparto pedirContactos={pedirRepartos} datos={repartosArr} verUbicacion={verUbicacionContacto} eliminar={(e) => eliminarReparto(e)} />
+
+      }
       {editar && modoContacto &&
         <ListEditar pedirContactos={pedircontactos} datos={contactosArr} verUbicacion={verUbicacionContacto} eliminar={(e) => eliminarContacto(e)} />
       }
@@ -462,14 +487,11 @@ export default function MyMap() {
 
           }}>POSTERGAR</Button>
           <Button mode="contained" icon={repartosArr.length ===1 ?"map-marker-check" :"chevron-right"} contentStyle={{ height: "100%" }} style={{ width: "33.3%", borderRadius: 0 }} onPress={() => {
-            async function avanzarReparto() {
-               
+            async function avanzarReparto() {               
               await db.runAsync('UPDATE repartos SET finalizado = 1 WHERE id = ?', repartosArr[0].id);
               const idsAsync = await AsyncStorage.getItem('ordenrepartos');
               let ids: number[] = idsAsync && idsAsync !== null ? JSON.parse(idsAsync) : [];
               const nuevosIds = repartosArr.length > 1 ? ids.filter(e => e != repartosArr[0].id):[]; 
-                
-             
               await AsyncStorage.setItem('ordenrepartos', JSON.stringify(nuevosIds));
             }
             avanzarReparto();
