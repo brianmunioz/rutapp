@@ -311,7 +311,7 @@ export default function MyMap() {
       <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", width: "100%", height: 40 }}>
         {accionUsuario != 'repartiendo' ? <Text style={{ width: "100%", color: "white", textAlign: "center", letterSpacing: 3, justifyContent: "center", textTransform: "uppercase" }}> <Icon source={modoContacto ? "account-box" : "truck-fast-outline"} size={15} color="white"></Icon>{modoContacto ? "contactos" : "repartos"}{accionUsuario ? ' - ' + accionUsuario : ""}</Text>
           :
-          <Text style={{ width: "100%", color: "white", textAlign: "center", letterSpacing: 3, justifyContent: "center", textTransform: "uppercase" }}> <Icon source={"truck-fast-outline"} size={15} color="white"></Icon>{repartosArr.length > 0 ? repartosArr[0].nombre + ' -' : 'Cargando'} {repartosArr.length > 0 ? repartosArr[0].direccion : '...'}</Text>
+          <Text style={{ width: "100%",flexWrap: "wrap", color: "white", textAlign: "center", letterSpacing: 3, justifyContent: "center", textTransform: "uppercase" }}> <Icon source={"truck-fast-outline"} size={15} color="white"></Icon>{repartosArr.length > 0 ? repartosArr[0].nombre + ' -' : 'Cargando'} {repartosArr.length > 0 ? repartosArr[0].direccion : '...'}</Text>
 
         }
       </View>

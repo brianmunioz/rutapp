@@ -14,7 +14,6 @@ interface IProps {
 
 const ListEditarReparto: React.FC<IProps> = ({ datos,eliminar, verUbicacion,pedirContactos }) => {
   const [eliminarModal, setEliminarModal] = useState({ bool: false, id: "", nombre: "" });
-  const [search, setSearch] = useState("");
   const [eliminando, setEliminando] = useState(false);
   const [eliminado, setEliminado] = useState(false);
   const [editarContacto, setEditarContacto] = useState({bool:false, index:0})
@@ -46,6 +45,9 @@ const ListEditarReparto: React.FC<IProps> = ({ datos,eliminar, verUbicacion,pedi
               left={(props) => <Icon {...props} color={e.tipo == "proveedor" ? "red" : "green"} source="map-marker" />}
               right={(props) => <IconButton {...props} icon="delete" onPress={() => setEliminarModal({ bool: !eliminarModal.bool, id: e.id.toString(), nombre: e.nombre })} />}
             />
+             <Card.Content>
+      <Text variant="bodyMedium">{e.descripcion ?e.descripcion :'Sin descripción de reparto'}</Text>
+    </Card.Content>
             <Card.Actions>
             <Button mode="outlined" disabled={index == 0 ? true : false}    onPress={() =>{
              const swapWithNext = async (index: number) => {
@@ -109,7 +111,6 @@ const ListEditarReparto: React.FC<IProps> = ({ datos,eliminar, verUbicacion,pedi
             {!eliminado && !eliminando&& 
              <Button textColor='red' onPress={async()=>{
                eliminar(eliminarModal.id)
-              setSearch("");
               
               setEliminando(true);
 
@@ -127,7 +128,7 @@ const ListEditarReparto: React.FC<IProps> = ({ datos,eliminar, verUbicacion,pedi
     </ScrollView>
 
   )} else {
-    return <EditarReparto pedirContactos={()=>pedirContactos()} setModalVisible={(e)=>setEditarContacto({bool:e,index:0})} datos={datos[editarContacto.index]}/>
+    return <EditarReparto pedirContactos={()=>pedirContactos()} setModalVisible={(e)=>setEditarContacto({bool:e,index:0})} datos={contactos[editarContacto.index]}/>
   }
 }
 

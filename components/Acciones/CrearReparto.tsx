@@ -145,6 +145,7 @@ const CrearReparto: React.FC<IProps> = ({ setModalVisible, ubicacionSeleccionada
       <Divider style={{ marginTop: 10 }}></Divider>
       <TextInput
         label="Descripción"
+        multiline
         value={data.descripcion}
         mode="outlined"
         activeOutlineColor='#000'

@@ -18,7 +18,7 @@ interface IProps {
 const EditarReparto: React.FC<IProps> = ({ setModalVisible, datos, pedirContactos }) => {
     const [mensaje, setMensaje] = useState({ bool: false, texto: "", error: true });
 
-    const [data, setData] = useState<IDatosContacto>({ nombre: datos.nombre, tipo: datos.tipo, direccion: datos.direccion, telefono: datos.telefono == null ? "" : datos.telefono.toString(), nota: datos.notas, lat: datos.lat, lng: datos.lng });
+    const [data, setData] = useState<IDatosContacto>({ nombre: datos.nombre, tipo: datos.tipo, direccion: datos.direccion, telefono: datos.telefono == null ? "" : datos.telefono.toString(), descripcion: datos.descripcion, lat: datos.lat, lng: datos.lng,nota:'' });
     const [editarUbicacion, setEditarUbicacion] = useState(false);
     const posInicial: MapMarker = {
         id: "ubicacion-seleccionada",
@@ -33,9 +33,7 @@ const EditarReparto: React.FC<IProps> = ({ setModalVisible, datos, pedirContacto
         if ((datos.nombre && !data.nombre) || (!data.direccion && datos.direccion)) {
             setMensaje({ bool: true, texto: "Nombre y dirección no pueden estar vacios", error: true })
         } else {
-            console.log('descripcion:',data.descripcion)
             const editarTodo = await db.runAsync('UPDATE repartos SET nombre = ?, direccion = ?, telefono = ?, descripcion=?, lat=?, lng=? WHERE id = ?', data.nombre, data.direccion, data.telefono != null ? parseInt(data.telefono) : null, data.descripcion ? data.descripcion :'', data.lat, data.lng, datos.id);
-            console.log(editarTodo)
             setMensaje({ bool: true, texto: "Reparto editado con éxito, en breve se dirigirá a la vista de repartos", error: false })
             pedirContactos();
         }
@@ -97,10 +95,9 @@ const EditarReparto: React.FC<IProps> = ({ setModalVisible, datos, pedirContacto
                 }
             </View>
 
-            {!datos.IDContacto &&
-                <Fragment>
                     <TextInput
                         label="Nombre"
+                        disabled={!datos.IDContacto}
                         value={data.nombre}
                         mode="outlined"
                         activeOutlineColor='#000'
@@ -108,6 +105,7 @@ const EditarReparto: React.FC<IProps> = ({ setModalVisible, datos, pedirContacto
                     <TextInput
                         label="Dirección"
                         value={data.direccion}
+                        disabled={!datos.IDContacto}
                         mode="outlined"
                         activeOutlineColor='#000'
                         onChangeText={text => setData({ ...data, direccion: text })} />
@@ -116,16 +114,17 @@ const EditarReparto: React.FC<IProps> = ({ setModalVisible, datos, pedirContacto
                             label="Número de telefono"
                             keyboardType='numeric'
                             value={data.telefono}
+                            disabled={!datos.IDContacto}
                             mode="outlined"
                             style={{ width: "70%" }}
                             activeOutlineColor='#000'
                             onChangeText={text => setData({ ...data, telefono: text })} />
                     </View>
-                </Fragment>
-            }
+           
 
             <TextInput
                 label="Descripción"
+                multiline
                 value={data.descripcion}
                 mode="outlined"
                 activeOutlineColor='#000'
