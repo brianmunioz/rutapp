@@ -3,7 +3,8 @@ import React, { useEffect, useState } from 'react'
 import { View, Text } from 'react-native';
 import { useSQLiteContext } from 'expo-sqlite';
 import IDatosContacto from '@/interfaces/IDatosContacto';
-import { Button, Icon, RadioButton, Snackbar,TextInput } from 'react-native-paper';
+import { Button, HelperText, Icon, RadioButton, Snackbar,TextInput } from 'react-native-paper';
+import verificarTexto from '@/helpers/verificarTexto';
 
 
 interface IProps {
@@ -18,15 +19,26 @@ const CrearContacto: React.FC<IProps> = ({setModalVisible,ubicacionSeleccionada,
 
   const [data, setData] = useState<IDatosContacto>({ nombre: "", tipo: "cliente", direccion: "", telefono: "", nota: "", lat: 0, lng: 0,area:"" });
   const db = useSQLiteContext();
-  useEffect(() => {
-    console.log(data);
-  }, [data])
+ 
 const crear = async()=>{
   if(!data.nombre || !data.direccion){
     setMensaje({bool: true, texto: "Nombre y dirección son obligatorios para poder crear un contacto nuevo",error:true})
   }else if((!data.area && data.telefono) || (!data.telefono && data.area)){
     setMensaje({bool: true,texto:"Área y teléfono deben ser completados ambos para poder guardar número de teléfono",error:true})
-  }else{
+  }else if (!verificarTexto(data.nombre)) {
+    setMensaje({ bool: true, texto: `El campo NOMBRE contiene caracteres inválidos. Asegúrate de usar únicamente letras, números y los siguientes caracteres: $%,.-!?¿¡:;"'()`, error: true })
+
+  }else if (!verificarTexto(data.direccion)) {
+    setMensaje({ bool: true, texto: `El campo DIRECCIÓN contiene caracteres inválidos. Asegúrate de usar únicamente letras, números y los siguientes caracteres: $%,.-!?¿¡:;"'()`, error: true })
+
+  }
+  
+  else if (!verificarTexto(data.nota) && data.nota) {
+    setMensaje({ bool: true, texto: `El campo NOTA contiene caracteres inválidos. Asegúrate de usar únicamente letras, números y los siguientes caracteres: $%,.-!?¿¡:;"'()`, error: true })
+
+  }
+  
+  else{
 const telefono = data.area && data.telefono ? data.area +""+ data.telefono :null;
 
     await db.runAsync('INSERT INTO contactos (nombre,direccion,telefono,tipo,notas,lat,lng) VALUES (?,?,?,?,?,?,?)', data.nombre, data.direccion,telefono != null ? parseInt(telefono): null,data.tipo,data.nota, ubicacionSeleccionada[0].position.lat,ubicacionSeleccionada[0].position.lng);
@@ -66,7 +78,7 @@ const telefono = data.area && data.telefono ? data.area +""+ data.telefono :null
         style={{width:"30%"}}
         onChangeText={text => setData({ ...data, area: text })} />
          <TextInput 
-        label="Número de telefono"
+        label="Número de teléfono"
         keyboardType='numeric'
         value={data.telefono}
         mode="outlined"
@@ -75,6 +87,15 @@ const telefono = data.area && data.telefono ? data.area +""+ data.telefono :null
         onChangeText={text => setData({ ...data, telefono: text })} />
         </View>
         <View>
+        <HelperText type='info' visible={true}>
+              Por favor, si ingresa un número de teléfono,ingrese su código de país. {"\n"}
+              Ejemplos:{"\n"}
+              - 54 para Argentina{"\n"}
+              - 1 para Estados Unidos{"\n"}
+              - 34 para España{"\n"}
+              - 55 para Brasil{"\n"}
+              - 52 para México{"\n"}
+              Asegúrese de usar solo números.              </HelperText>
         <Text>Seleccione tipo de contacto:</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
         <RadioButton
@@ -106,7 +127,7 @@ const telefono = data.area && data.telefono ? data.area +""+ data.telefono :null
         activeOutlineColor='#000'
         onChangeText={text => setData({ ...data, nota: text })} />
         <Button mode='contained' onPress={crear}>Crear contacto</Button>
-        <Snackbar style={{backgroundColor:mensaje.error ? "#ff3a30" : "#386b38"}} rippleColor={"black"} visible={mensaje.bool} onDismiss={()=>setMensaje({...mensaje,bool:false})}>{mensaje.texto}</Snackbar>
+        <Snackbar style={{backgroundColor:mensaje.error ? "#740938" : "#386b38"}} rippleColor={"black"} visible={mensaje.bool} onDismiss={()=>setMensaje({...mensaje,bool:false})}>{mensaje.texto}</Snackbar>
     </View>
   )
 }

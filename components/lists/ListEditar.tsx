@@ -13,12 +13,13 @@ interface IProps {
 
 const ListEditar: React.FC<IProps> = ({ datos,eliminar, verUbicacion,pedirContactos }) => {
   const [eliminarModal, setEliminarModal] = useState({ bool: false, id: "", nombre: "" });
-  const [search, setSearch] = useState("");
   const [eliminando, setEliminando] = useState(false);
   const [eliminado, setEliminado] = useState(false);
   const [editarContacto, setEditarContacto] = useState({bool:false, index:0})
 
   const [contactos, setContactos] = useState(datos)
+  const [search, setSearch] = useState("");
+
   const buscar = (e: string) => {
     setSearch(e);
     if (e.trim()) {

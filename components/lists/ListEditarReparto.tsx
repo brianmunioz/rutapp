@@ -42,7 +42,7 @@ const ListEditarReparto: React.FC<IProps> = ({ datos,eliminar, verUbicacion,pedi
             <Card.Title
               title={e.nombre}
               subtitle={e.direccion}
-              left={(props) => <Icon {...props} color={e.tipo == "proveedor" ? "red" : "green"} source="map-marker" />}
+              left={(props) => <Icon {...props} color={e.tipo_contacto == "proveedor" ? "red" : "green"} source="map-marker" />}
               right={(props) => <IconButton {...props} icon="delete" onPress={() => setEliminarModal({ bool: !eliminarModal.bool, id: e.id.toString(), nombre: e.nombre })} />}
             />
              <Card.Content>
@@ -78,7 +78,6 @@ const ListEditarReparto: React.FC<IProps> = ({ datos,eliminar, verUbicacion,pedi
                 
             };
             swapWithNext(index);
-            console.log(contactos.map(e=>e.id))
   
             }}> <Icon  source={'chevron-down'} size={20}></Icon> </Button>
               <Button mode='outlined' onPress={() => verUbicacion(e.lat,e.lng)}>

@@ -62,9 +62,6 @@ const EditarContacto: React.FC<IProps> = ({ setModalVisible, datos, pedirContact
                     zoom={18}
                     loadingIndicator={() => <ActivityIndicator style={{ height: "100%" }} animating={true} size={"large"} color={"black"} />}
                     onMessage={(message) => {
-                        console.log(message)
-
-
                         if (message.tag === 'onMapClicked') {
                             const newMarker: MapMarker = {
                                 id: "ubicacion-seleccionada",
@@ -162,7 +159,7 @@ const EditarContacto: React.FC<IProps> = ({ setModalVisible, datos, pedirContact
                 activeOutlineColor='#000'
                 onChangeText={text => setData({ ...data, nota: text })} />
             <Button mode='contained' onPress={editar}>Editar contacto</Button>
-            <Snackbar style={{ backgroundColor: mensaje.error ? "#ff3a30" : "#386b38" }} rippleColor={"black"} visible={mensaje.bool} onDismiss={() => setMensaje({ ...mensaje, bool: false })}>{mensaje.texto}</Snackbar>
+            <Snackbar style={{ backgroundColor: mensaje.error ? "#740938" : "#386b38" }} rippleColor={"black"} visible={mensaje.bool} onDismiss={() => setMensaje({ ...mensaje, bool: false })}>{mensaje.texto}</Snackbar>
         </View>
     )
 }

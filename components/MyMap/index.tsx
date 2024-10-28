@@ -41,6 +41,7 @@ export default function MyMap() {
   const [editar, setEditar] = useState(false);
   const [mensajeSnack, setMensajeSnack] = useState({ bool: false, texto: "" });
   const [ubicacionSeleccionada, setUbicacionSeleccionada] = useState<MapMarker[]>([]);
+  const [followMyLocation,setFollowMyLocation] = useState<boolean>(true);
   const [modoContacto, setModoContacto] = useState(true);
   const initPosWithoutLocation: ILocation = modoContacto ? contactosArr.length > 0 ?
     { lat: contactosArr[contactosArr.length - 1].lat, lng: contactosArr[contactosArr.length - 1].lng } : { lat: -35.103034508838604, lng: -59.50661499922906 }
@@ -56,18 +57,7 @@ export default function MyMap() {
     const value = await AsyncStorage.getItem('repartiendo');
     return value == 'true' ?true : false;
   };
-  useEffect(() => {
-    if (ownPosition) {
-      if (ownPosition.lat != actualPos.lat && ownPosition.lng != actualPos.lng && boolLocation === true) {
-        setMapCenterPos({ lat: ownPosition.lat, lng: ownPosition.lng });
-        setEditar(false);
-      }
-    }
-    setBoolLocation(false)
-
-
-
-  }, [boolLocation]);
+ 
   useEffect(()=>{
     if(!editar){
       if(modoContacto){
@@ -106,24 +96,34 @@ export default function MyMap() {
     pedirRepartos();
   }
   const getLocationAsync = async () => {
+  const subscription = await Location.watchPositionAsync(
+  {
+    accuracy: Location.Accuracy.High,
+    timeInterval: 5000, // Tiempo entre actualizaciones en milisegundos
+    distanceInterval: 1, // Distancia mínima en metros para una nueva actualización
+  },
+  (newLocation) => {
+    const { latitude, longitude } = newLocation.coords;
+    setOwnPosition({
+      lat: latitude,
+      lng: longitude,
+    });
+    
 
-
-    await Location.getCurrentPositionAsync({}).then((e) => {
-      setOwnPosition({
-        lat: e.coords.latitude,
-        lng: e.coords.longitude,
-      })
-      setMapCenterPos({
-        lat: e.coords.latitude,
-        lng: e.coords.longitude,
-      })
-    })
-
-    setBoolLocation(true)
-    setZoom(17)
-
-
+  })
   }
+  useEffect(()=>{
+    
+    if(followMyLocation != false && ownPosition) {
+      
+      setMapCenterPos({
+        lat: ownPosition.lat,
+        lng: ownPosition.lng,
+      });
+     
+      setZoom(17)
+    }
+  },[followMyLocation])
 
   const pedircontactos = async () => {
 
@@ -162,11 +162,11 @@ export default function MyMap() {
           </div>
           <p 
             class="tooltip tooltip-${e.id}" 
-            style="display:none; position:absolute;font-weight:600 ; white-space: nowrap; top:15px; left:15px; border-radius: 5px; background:white; color: #000; padding:5px; border:1px solid #ccc; z-index: 10000;" 
-          >   <span style="font-weight: bold">${e.tipo.toUpperCase()}:</span> ${e.nombre} <br/>
-            <span style="font-weight: bold">DIRECCIÓN:</span> ${e.direccion} <br/>
-            <span style="font-weight: bold">TELÉFONO:</span> ${e.telefono || "no tiene"} <br/>
-            <span style="font-weight: bold">NOTA:</span> ${e.notas || "no hay"}    
+            style="display:none; position:absolute;font-weight:600 ;flex-wrap:wrap; width:250px ; white-space: wrap; top:15px; left:15px; border-radius: 5px; background:white; color: #3c3c3c; padding:5px; border:1px solid #ccc; z-index: 10000;" 
+          >   <span style="font-weight: bold;color: #000">${e.tipo.toUpperCase()}:</span> ${e.nombre} <br/>
+            <span style="font-weight: bold;color: #000">DIRECCIÓN:</span> ${e.direccion} <br/>
+            <span style="font-weight: bold;color: #000">TELÉFONO:</span> ${e.telefono || "no tiene"} <br/>
+            <span style="font-weight: bold;color: #000">NOTA:</span> ${e.notas || "no hay"}    
           </p>
         </div>`,
         size: [15, 15],
@@ -233,12 +233,12 @@ export default function MyMap() {
           </div>
           <p 
             class="tooltip tooltip-${e.id}" 
-            style="display:none; position:absolute;font-weight:600 ; white-space: nowrap; top:15px; left:15px; border-radius: 5px; background:white; color: #000; padding:5px; border:1px solid #ccc; z-index: 10000;" 
-          >   <span style="font-weight: bold">${e.tipo_contacto.toUpperCase()}:</span> ${e.nombre} <br/>
-            <span style="font-weight: bold">DIRECCIÓN:</span> ${e.direccion} <br/>
-            <span style="font-weight: bold">TELÉFONO:</span> ${e.telefono || "no tiene"} <br/>
-            <span style="font-weight: bold">FECHA DE CREACIÓN:</span> ${e.fecha || "no tiene"} <br/>
-            <span style="font-weight: bold">DESCRIPCIÓN:</span> ${e.descripcion || "no hay"}                
+            style="display:none; position:absolute;font-weight:600 ;width: 250px;color:#3c3c3c; flex-wrap: wrap; white-space: wrap; top:15px; left:15px; border-radius: 5px; background:white; padding:5px; border:1px solid #ccc; z-index: 10000;" 
+          >   <span style="font-weight: bold;color: #000">${e.tipo_contacto.toUpperCase()}:</span> ${e.nombre} <br/>
+            <span style="font-weight: bold;color: #000">DIRECCIÓN:</span> ${e.direccion} <br/>
+            <span style="font-weight: bold;color: #000">TELÉFONO:</span> ${e.telefono || "no tiene"} <br/>
+            <span style="font-weight: bold;color: #000">FECHA DE CREACIÓN:</span> ${e.fecha || "no tiene"} <br/>
+            <span style="font-weight: bold;color: #000">DESCRIPCIÓN:</span> ${e.descripcion || "no hay"}                
           </p>
         </div>`,
         size: [15, 15],
@@ -269,6 +269,7 @@ export default function MyMap() {
     getLocationAsync().catch((error) => {
       console.error(error)
     })
+    
   }, [modoContacto])
   const markers: MapMarker[] = [{
     id: "ubicacion",
@@ -299,7 +300,7 @@ export default function MyMap() {
     setMarkerTel({ id: 0, show: false, tel: 0 });
   }
   useEffect(() => {
-    if (dataMarkers.length > 0) {
+    if (dataMarkers.length > 0 && !modoContacto) {
       setMapCenterPos({ lat: repartosArr[0].lat, lng: repartosArr[0].lng });
       setZoom(18)
     }
@@ -324,6 +325,7 @@ export default function MyMap() {
         <Button contentStyle={{ height: "100%" }} buttonColor="rgb(255, 132, 132)" style={{ flex: 1, borderRadius: 0 }} mode="contained" onPress={
           () => {
             if (ownPosition) {
+              setFollowMyLocation(true)
               setMapCenterPos(actualPos);
               setMarkerTel({ id: 0, show: false, tel: 0 })
               if (accionUsuario != 'repartiendo') setAccionUsuario(null);
@@ -405,11 +407,12 @@ export default function MyMap() {
             : accionUsuario === 'repartiendo' && repartosArr.length > 0 ?
               [dataMarkers[0]]
               : dataMarkers.length > 0 ? dataMarkers : []}
-          mapCenterPosition={boolLocation || repartoBool ? mapCenterPos : mapCenterPos}
+          mapCenterPosition={followMyLocation || repartoBool ? mapCenterPos : mapCenterPos}
           maxZoom={18}
-          zoom={boolLocation ? zoom : defaultZoom}
+          zoom={followMyLocation ? zoom : defaultZoom}
           loadingIndicator={() => <ActivityIndicator style={{ height: "100%" }} animating={true} size={"large"} color={"black"} />}
           onMessage={(message) => {
+            if(message.tag === 'onMove' && followMyLocation) setFollowMyLocation(false)
             if (message.tag == "onMoveEnd") {
               setZoom(message.zoom)
               setActualPos(message.mapCenter)

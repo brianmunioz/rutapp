@@ -1,23 +1,20 @@
 import { ExpoLeaflet, MapLayer, MapMarker } from 'expo-leaflet';
-import React, { Fragment, useState } from 'react'
+import React, { useState } from 'react'
 import { View } from 'react-native';
 import { useSQLiteContext } from 'expo-sqlite';
 import IDatosContacto from '@/interfaces/IDatosContacto';
 import { ActivityIndicator, Button, Snackbar, TextInput } from 'react-native-paper';
 import IRepartosSQL from '@/interfaces/IRepartosSQL';
+import verificarTexto from '@/helpers/verificarTexto';
 
 
 interface IProps {
     datos: IRepartosSQL,
     setModalVisible: (bool: boolean) => void,
     pedirContactos: () => void,
-    // ubicacionSeleccionada: MapMarker[],
-
 }
-
 const EditarReparto: React.FC<IProps> = ({ setModalVisible, datos, pedirContactos }) => {
     const [mensaje, setMensaje] = useState({ bool: false, texto: "", error: true });
-
     const [data, setData] = useState<IDatosContacto>({ nombre: datos.nombre, tipo: datos.tipo, direccion: datos.direccion, telefono: datos.telefono == null ? "" : datos.telefono.toString(), descripcion: datos.descripcion, lat: datos.lat, lng: datos.lng,nota:'' });
     const [editarUbicacion, setEditarUbicacion] = useState(false);
     const posInicial: MapMarker = {
@@ -28,14 +25,24 @@ const EditarReparto: React.FC<IProps> = ({ setModalVisible, datos, pedirContacto
     }
     const [ubicacionSeleccionada, setUbicacionSeleccionada] = useState<MapMarker>(posInicial);
     const db = useSQLiteContext();
-
     const editar = async () => {
         if ((datos.nombre && !data.nombre) || (!data.direccion && datos.direccion)) {
             setMensaje({ bool: true, texto: "Nombre y dirección no pueden estar vacios", error: true })
-        } else {
+        }else if( !verificarTexto(data.nombre)){
+            setMensaje({ bool: true, texto: `El campo NOMBRE contiene caracteres inválidos. Asegúrate de usar únicamente letras, números y los siguientes caracteres: $%,.-!?¿¡:;"'()`, error: true })
+      
+          } else if( !verificarTexto(data.direccion)){
+            setMensaje({ bool: true, texto: `El campo DIRECCIÓN contiene caracteres inválidos. Asegúrate de usar únicamente letras, números y los siguientes caracteres: $%,.-!?¿¡:;"'()`, error: true })
+      
+          }else if( data.descripcion && !verificarTexto(data.descripcion)){
+            setMensaje({ bool: true, texto: `El campo DESCRIPCIÓN contiene caracteres inválidos. Asegúrate de usar únicamente letras, números y los siguientes caracteres: $%,.-!?¿¡:;"'()`, error: true })      
+          } else {
             const editarTodo = await db.runAsync('UPDATE repartos SET nombre = ?, direccion = ?, telefono = ?, descripcion=?, lat=?, lng=? WHERE id = ?', data.nombre, data.direccion, data.telefono != null ? parseInt(data.telefono) : null, data.descripcion ? data.descripcion :'', data.lat, data.lng, datos.id);
-            setMensaje({ bool: true, texto: "Reparto editado con éxito, en breve se dirigirá a la vista de repartos", error: false })
+            setMensaje({ bool: true, texto: "Reparto editado con éxito, en breve se dirigirá a la lista de repartos", error: false })
             pedirContactos();
+            setTimeout(()=>{
+                setModalVisible(false)
+            },1000)
         }
     }
     if (editarUbicacion) {
@@ -97,7 +104,7 @@ const EditarReparto: React.FC<IProps> = ({ setModalVisible, datos, pedirContacto
 
                     <TextInput
                         label="Nombre"
-                        disabled={!datos.IDContacto}
+                        disabled={!datos.IDContacto?false:true}
                         value={data.nombre}
                         mode="outlined"
                         activeOutlineColor='#000'
@@ -105,7 +112,7 @@ const EditarReparto: React.FC<IProps> = ({ setModalVisible, datos, pedirContacto
                     <TextInput
                         label="Dirección"
                         value={data.direccion}
-                        disabled={!datos.IDContacto}
+                        disabled={!datos.IDContacto?false:true}
                         mode="outlined"
                         activeOutlineColor='#000'
                         onChangeText={text => setData({ ...data, direccion: text })} />
@@ -114,14 +121,12 @@ const EditarReparto: React.FC<IProps> = ({ setModalVisible, datos, pedirContacto
                             label="Número de telefono"
                             keyboardType='numeric'
                             value={data.telefono}
-                            disabled={!datos.IDContacto}
+                            disabled={!datos.IDContacto?false:true}
                             mode="outlined"
                             style={{ width: "70%" }}
                             activeOutlineColor='#000'
                             onChangeText={text => setData({ ...data, telefono: text })} />
                     </View>
-           
-
             <TextInput
                 label="Descripción"
                 multiline
@@ -130,7 +135,7 @@ const EditarReparto: React.FC<IProps> = ({ setModalVisible, datos, pedirContacto
                 activeOutlineColor='#000'
                 onChangeText={text => setData({ ...data, descripcion: text })} />
             <Button mode='contained' onPress={editar}>Editar reparto</Button>
-            <Snackbar style={{ backgroundColor: mensaje.error ? "#ff3a30" : "#386b38" }} rippleColor={"black"} visible={mensaje.bool} onDismiss={() => setMensaje({ ...mensaje, bool: false })}>{mensaje.texto}</Snackbar>
+            <Snackbar style={{ backgroundColor: mensaje.error ? "#740938" : "#386b38" }} rippleColor={"black"} visible={mensaje.bool} onDismiss={() => setMensaje({ ...mensaje, bool: false })}>{mensaje.texto}</Snackbar>
         </View>
     )
 }
