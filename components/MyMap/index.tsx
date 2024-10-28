@@ -67,6 +67,29 @@ export default function MyMap() {
       }
     }
   },[editar])
+  const getSingleLocationAsync = async () => {
+    try {
+      // Solicita permiso de ubicación
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.log('Permiso de ubicación denegado');
+        return null; // Retorna null si el permiso fue denegado
+      }
+  
+      // Obtén la ubicación actual solo una vez
+      const { coords } = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+      
+      return {
+        lat: coords.latitude,
+        lng: coords.longitude,
+      };
+    } catch (error) {
+      console.error("Error al obtener la ubicación única: ", error);
+      return null;
+    }
+  };
 
   const db = useSQLiteContext();
   const verUbicacionContacto = (lat: number, lng: number) => {
@@ -113,7 +136,8 @@ export default function MyMap() {
   })
   }
   useEffect(()=>{
-    
+    if(!ownPosition) getSingleLocationAsync();
+
     if(followMyLocation != false && ownPosition) {
       
       setMapCenterPos({
