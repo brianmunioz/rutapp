@@ -136,7 +136,7 @@ export default function MyMap() {
   })
   }
   useEffect(()=>{
-    if(!ownPosition) getSingleLocationAsync();
+    if(!ownPosition || ownPosition == null) getSingleLocationAsync();
 
     if(followMyLocation != false && ownPosition) {
       
@@ -272,6 +272,7 @@ export default function MyMap() {
    
   }
   useEffect(() => {
+    if(!ownPosition || ownPosition == null)getSingleLocationAsync();
     setAccionUsuario(null);
     setUbicacionSeleccionada([]);
     const checkRepartiendo = async () => {
