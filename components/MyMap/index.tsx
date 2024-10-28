@@ -136,7 +136,20 @@ export default function MyMap() {
   })
   }
   useEffect(()=>{
-    if(!ownPosition || ownPosition == null) getSingleLocationAsync();
+    if(!ownPosition || ownPosition == null) {
+      
+      getSingleLocationAsync().then(e=>
+      {
+        if(e != null){
+          setOwnPosition(e);
+          setMapCenterPos(e);
+          setFollowMyLocation(true)
+        }
+
+      }
+
+      );
+    };
 
     if(followMyLocation != false && ownPosition) {
       
@@ -272,7 +285,19 @@ export default function MyMap() {
    
   }
   useEffect(() => {
-    if(!ownPosition || ownPosition == null)getSingleLocationAsync();
+    if(!ownPosition || ownPosition == null){
+      getSingleLocationAsync().then(e=>
+        {
+          if(e != null){
+            setOwnPosition(e);
+            setMapCenterPos(e);
+            setFollowMyLocation(true)
+          }
+  
+        }
+  
+        );
+    };
     setAccionUsuario(null);
     setUbicacionSeleccionada([]);
     const checkRepartiendo = async () => {
