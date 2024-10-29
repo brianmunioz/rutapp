@@ -291,6 +291,7 @@ export default function MyMap() {
           if(e != null){
             setOwnPosition(e);
             setMapCenterPos(e);
+            setZoom(17);
             setFollowMyLocation(true)
           }
   

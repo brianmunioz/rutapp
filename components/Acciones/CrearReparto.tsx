@@ -171,7 +171,7 @@ const CrearReparto: React.FC<IProps> = ({ setModalVisible, ubicacionSeleccionada
                   right={() => <Button mode="elevated" onPress={() => {
                     setData({ ...data, nombre: "", IDContacto: "", lng: 0, lat: 0, direccion: '', telefono: '' })
                   }}>quitar seleccion</Button>}
-                  left={(props) => <Icon {...props} source="map-marker" color={data.tipo === "proveedor" ? 'green' : 'red'} />}
+                  left={(props) => <Icon {...props} source="map-marker" color={data.tipo === "proveedor" ? 'red' : 'green'} />}
                 />
 
               </Card>
