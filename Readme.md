@@ -1,10 +1,4 @@
-# Expo-Leaflet + OpenStreetMap (WebView Approach)
+# RUTAPP - app de repartos disponible en play store
 
-This is a minimal example of using [expo-leaflet](https://www.npmjs.com/package/expo-leaflet) with OpenStreetMap.
+ [descargala]([https://www.npmjs.com/package/expo-leaflet](https://play.google.com/store/apps/details?id=com.appsbucket.rutapp&pli=1)) 
 
-Reference:
-
-- https://www.npmjs.com/package/expo-leaflet
-- https://github.com/Dean177/expo-leaflet
-- https://github.com/Dean177/expo-leaflet/tree/master/demo
-- https://www.openstreetmap.org
